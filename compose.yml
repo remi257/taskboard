@@ -1,0 +1,55 @@
+version: '3.3'
+services:
+    mongo:
+        ports:
+         - '27017:27017'
+        container_name: ctnr-mongo
+        # restart: always
+        logging:
+            options:
+                max-size: 300m
+        environment:
+         - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+         - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+        image: mongo
+        volumes: 
+         - /c/mongodata:/data/db
+        networks:
+         - backend
+    # discord:
+    #     build: discordbot
+    #     container_name: ctnr-discord
+    #     logging:
+    #         options:
+    #             max-size: 300m
+    #     environment:
+    #         - DISCORD_TOKEN=${DISCORD_TOKEN}
+    #         - CONNECTION_STRING=${CONNECTION_STRING}
+    #     depends_on:
+    #         - mongo
+    flaskapi:
+        build: api
+        stop_signal: SIGINT
+        container_name: ctnr-flaskapi
+        ports: 
+         - 8081:5000
+        # depends_on:
+        #  - mongo
+        environment:
+            - CONNECTION_STRING=${CONNECTION_STRING}
+        networks:
+         - frontend
+         - backend
+    web:
+        build: web
+        ports: 
+         - 8080:80
+        depends_on:
+            - flaskapi
+        environment:
+            - API_URL=${API_URL}
+        networks:
+         - frontend
+networks:
+    frontend:
+    backend:
